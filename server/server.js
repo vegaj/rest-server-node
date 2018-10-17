@@ -1,6 +1,8 @@
 require('./config/config')
 
 const express = require('express')
+const mongoose = require('mongoose');
+
 const app = express()
 const bodyParser = require('body-parser')
 
@@ -9,23 +11,14 @@ app.use(bodyParser.urlencoded({ extended: false }));
 //parse application/json
 app.use(bodyParser.json());
 
+app.use(require('./routes/user'))
+
 const port = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
-    res.json({ msg: "Hello, World!!" })
-})
 
-app.post('/', (req, res) => {
-
-    let body = req.body;
-
-    if (body.name === undefined) {
-        res.status(400).json({ ok: false, err: 'name required' })
-    } else {
-        res.json({
-            body
-        });
-    }
+mongoose.connect("mongodb://localhost:27017/node-tuto", { useNewUrlParser: true }, (err, res) => {
+    if (err) throw err;
+    console.log('Connected to database.');
 })
 
 
