@@ -1,5 +1,8 @@
 require('./config/config')
 
+
+console.log(`Starting server in ${process.env.NODE_ENV} mode.`)
+
 const express = require('express')
 const mongoose = require('mongoose');
 
@@ -16,7 +19,7 @@ app.use(require('./routes/user'))
 const port = process.env.PORT || 3000;
 
 
-mongoose.connect("mongodb://localhost:27017/node-tuto", { useNewUrlParser: true }, (err, res) => {
+mongoose.connect(process.env.URL_DB, { useNewUrlParser: true }, (err, res) => {
     if (err) throw err;
     console.log('Connected to database.');
 })
