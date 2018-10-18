@@ -1,6 +1,7 @@
 const express = require('express');
 const _ = require('underscore');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken')
 
 const app = express();
 const User = require('../model/user')
@@ -34,10 +35,25 @@ app.post('/login', (req, resp) => {
                     return;
                 }
 
+                if (!userDB.status) {
+                    return resp.status(403).json({
+                        ok: false,
+                        err: 'this account has been disabled'
+                    })
+                }
+
+                let token = jwt.sign(
+                    _.pick(userDB, ['_id', 'email', 'img', 'role']),
+                    process.env.SEED, {
+                        jwtid: 'node-server-auth',
+                        expiresIn: '1h',
+                        subject: JSON.stringify(userDB._id)
+                    })
+
                 resp.json({
                     ok: true,
                     user: userDB.name,
-                    token: '123'
+                    token
                 })
             })
             .catch(err => {

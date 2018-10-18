@@ -20,3 +20,8 @@ if (process.env.NODE_ENV == 'dev') {
         `mongodb://${process.env.userdb}:${process.env.dbpassword}@ds219983.mlab.com:19983/node-test`
 }
 process.env.URL_DB = urlDB;
+
+//==================================
+// JWT SEED
+//==================================
+process.env.SEED = process.env.SEED || 'seed-for-development'

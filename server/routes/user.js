@@ -6,6 +6,7 @@ const app = express()
 const SHOW_DEF = 5;
 
 const User = require('../model/user')
+const verifyJWT = require('../middlewares/auth').verifyJWT
 
 app.get('/', (req, res) => {
     res.json({ msg: "Hello, World!!" })
@@ -91,7 +92,7 @@ app.patch('/user/:id', (req, resp) => {
 
 })
 
-app.get('/user', (req, resp) => {
+app.get('/user', verifyJWT, (req, resp) => {
 
     let from;
     let show;
