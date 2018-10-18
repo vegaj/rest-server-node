@@ -14,7 +14,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 //parse application/json
 app.use(bodyParser.json());
 
-app.use(require('./routes/user'))
+app.use(require('./routes/routes'));
 
 const port = process.env.PORT || 3000;
 

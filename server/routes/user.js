@@ -119,7 +119,6 @@ app.get('/user', (req, resp) => {
             if (err) {
                 resp.status(400).json({ ok: false, err })
             } else {
-                console.log(docs)
                 resp.status(200).json({
                     ok: true,
                     from: from,
