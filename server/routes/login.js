@@ -6,8 +6,9 @@ const jwt = require('jsonwebtoken')
 const app = express();
 const User = require('../model/user')
 
+const auth = require('../middlewares/auth')
 
-app.post('/login', (req, resp) => {
+app.post('/login', auth.ifNotLoggedIn, (req, resp) => {
 
     let body = _.pick(req.body, ['password', 'email']);
     if (undefined === body.password || undefined === body.email) {
@@ -17,7 +18,7 @@ app.post('/login', (req, resp) => {
 
     User.findOne({ email: body.email }, (err, userDB) => {
         if (err) {
-            console.log(`Internal ${err}`)
+            console.log(`Internal -> ${err}`)
             resp.status(500).json({ ok: false, err: 'Internal Server Error' })
             return;
         }
@@ -42,13 +43,14 @@ app.post('/login', (req, resp) => {
                     })
                 }
 
-                let token = jwt.sign(
-                    _.pick(userDB, ['_id', 'email', 'img', 'role']),
+                let payload = { user: { id: userDB._id, email: userDB.email, img: userDB.img, role: userDB.role, google: userDB.google } };
+                let token = jwt.sign(payload,
                     process.env.SEED, {
                         jwtid: 'node-server-auth',
                         expiresIn: '1h',
-                        subject: JSON.stringify(userDB._id)
+                        subject: JSON.stringify(userDB._id),
                     })
+
 
                 resp.json({
                     ok: true,

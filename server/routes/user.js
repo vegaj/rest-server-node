@@ -6,7 +6,7 @@ const app = express()
 const SHOW_DEF = 5;
 
 const User = require('../model/user')
-const verifyJWT = require('../middlewares/auth').verifyJWT
+const auth = require('../middlewares/auth')
 
 app.get('/', (req, res) => {
     res.json({ msg: "Hello, World!!" })
@@ -14,7 +14,8 @@ app.get('/', (req, res) => {
 
 const bcrypt = require('bcryptjs')
 
-app.post('/user', (req, res) => {
+app.post('/user', auth.ifNotLoggedIn, (req, res) => {
+
 
     let body = req.body;
     let digest
@@ -29,8 +30,6 @@ app.post('/user', (req, res) => {
     let user = new User(body);
 
     user.save((err, userDB) => {
-
-        console.log(`error: ${err}.\n\n User: ${userDB}`)
         if (err) {
             res.status(400).json({ ok: false, err })
         } else {
@@ -40,12 +39,11 @@ app.post('/user', (req, res) => {
 
 })
 
-app.put('/user/:id', (req, res) => {
+app.put('/user/', auth.verifyJWT, (req, res) => {
 
-    let id = req.params.id;
+    let id = req.user._id;
     let body = _.pick(req.body, ['name', 'img'])
 
-    console.log(state)
     User.findOneAndUpdate(id, body, { runValidators: true, new: true }, (err, userDB) => {
         if (err) {
             res.status(400).json({ ok: false, err })
@@ -55,10 +53,11 @@ app.put('/user/:id', (req, res) => {
     })
 })
 
-app.delete('/delete/:id', (req, resp) => {
 
-    let id = req.param.id;
+//Hard deletion
+app.delete('/delete/:id', [auth.verifyJWT, auth.forAdminOnly], (req, resp) => {
 
+    let id = req.params.id;
     if (id === undefined) {
         resp.status(404).json({ ok: false, err: 'expected id' })
         return;
@@ -74,15 +73,21 @@ app.delete('/delete/:id', (req, resp) => {
 })
 
 //Not a switch status to active/inactive
-app.patch('/user/:id', (req, resp) => {
+app.patch('/user/:id', [auth.verifyJWT, auth.forAdminOnly], (req, resp) => {
 
     let id = req.params.id;
+    let status = req.body.status;
+
     if (id === undefined) {
         resp.status(404).json({ ok: false, err: 'expected id' })
         return;
     }
 
-    User.findOneAndUpdate(id, { status: false }, { new: true, runValidators: true }, (err, doc) => {
+    if (status === undefined) {
+        return resp.status(400).json({ ok: false, err: 'specify the new status for the user (enabled = true / disabled = false)' })
+    }
+
+    User.findOneAndUpdate(id, { status }, { new: true, runValidators: true }, (err, doc) => {
         if (err) {
             resp.status(404).json({ ok: false, err });
         } else {
@@ -92,7 +97,35 @@ app.patch('/user/:id', (req, resp) => {
 
 })
 
-app.get('/user', verifyJWT, (req, resp) => {
+//Get information from the current user
+app.get('/user', auth.verifyJWT, (req, resp) => {
+
+    let id = req.user.id;
+
+    if (!id) {
+        console.log('On Get: /user. user._id field missing!');
+        return resp.status(400).json({ ok: false, err: 'bad request' });
+    }
+
+    let user = User.findOne({ _id: id }, (err, userDB) => {
+
+        if (err) {
+            console.log(`On Get: /user. ${err}`)
+            return resp.status(500).json({ ok: false, err: 'service unavailable. Try again later.' });
+        }
+
+        if (!userDB) {
+            return resp.status(404).json({ ok: false, err: 'not found' });
+        }
+
+        return resp.json(_.pick(userDB, ['email', 'name', 'img', 'role']))
+    })
+
+
+
+})
+
+app.get('/users', auth.verifyJWT, (req, resp) => {
 
     let from;
     let show;
@@ -129,32 +162,6 @@ app.get('/user', verifyJWT, (req, resp) => {
             }
         })
 })
-
-/* Forma 1
-app.put('/user/:id', (req, res) => {
-    let body = req.body;
-    let id = req.params.id;
-
-    let dq = User.findById(id, (err, result) => {
-        if (err) {
-            res.status(404).json({ ok: false, err });
-            return;
-        }
-
-        console.log(result)
-        result.name = body.name || result.name;
-        result.img = body.img || result.img;
-
-        result.save((err, userDB) => {
-            if (err) {
-                res.status(400).json({ ok: false, err });
-            } else {
-                res.status(200).json({ ok: true, userDB })
-            }
-        });
-    })
-})
-*/
 
 
 module.exports = app;
