@@ -97,6 +97,30 @@ app.patch('/user/:id', [auth.verifyJWT, auth.forAdminOnly], (req, resp) => {
 
 })
 
+
+//Get information from a certain user searched by name
+app.get('/user/:username', auth.verifyJWT, (req, resp) => {
+
+    let name = req.params.username;
+
+    if (name === undefined) {
+        return resp.status(400).json({ ok: false, err: 'provide a username' })
+    }
+
+    User.findOne({ name }, 'email name img role', (err, userDB) => {
+        if (err) {
+            console.log(`On Get: /user. ${err}`)
+            return resp.status(500).json({ ok: false, err: 'service unavailable. Try again later.' });
+        }
+
+        if (!userDB) {
+            return resp.status(404).json({ ok: false, err: 'not found' });
+        }
+
+        resp.json({ ok: true, user: userDB })
+    })
+})
+
 //Get information from the current user
 app.get('/user', auth.verifyJWT, (req, resp) => {
 
@@ -107,7 +131,7 @@ app.get('/user', auth.verifyJWT, (req, resp) => {
         return resp.status(400).json({ ok: false, err: 'bad request' });
     }
 
-    let user = User.findOne({ _id: id }, (err, userDB) => {
+    User.findOne({ _id: id }, 'email name img role', (err, userDB) => {
 
         if (err) {
             console.log(`On Get: /user. ${err}`)
@@ -118,11 +142,8 @@ app.get('/user', auth.verifyJWT, (req, resp) => {
             return resp.status(404).json({ ok: false, err: 'not found' });
         }
 
-        return resp.json(_.pick(userDB, ['email', 'name', 'img', 'role']))
+        return resp.json({ ok: true, user: userDB })
     })
-
-
-
 })
 
 app.get('/users', auth.verifyJWT, (req, resp) => {
@@ -146,7 +167,7 @@ app.get('/users', auth.verifyJWT, (req, resp) => {
         return;
     }
 
-    User.find({ status: true }, 'name email status')
+    User.find({ status: true }, 'name img email status')
         .skip(from)
         .limit(show)
         .exec((err, docs) => {
