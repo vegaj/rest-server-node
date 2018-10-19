@@ -41,7 +41,7 @@ app.post('/user', auth.ifNotLoggedIn, (req, res) => {
 
 app.put('/user/', auth.verifyJWT, (req, res) => {
 
-    let id = req.user._id;
+    let id = req.user.id;
     let body = _.pick(req.body, ['name', 'img'])
 
     User.findOneAndUpdate(id, body, { runValidators: true, new: true }, (err, userDB) => {
