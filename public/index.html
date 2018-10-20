@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Google Sign-In demo</title>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
+    <script src="https://apis.google.com/js/api:client.js"></script>
+    <meta name="google-signin-client_id" content="545101703869-pc8bioi5dh736hhvs8mluns7tfp4b5g0.apps.googleusercontent.com">
+
+    <script>
+        function signOut() {
+            var auth2 = gapi.auth2.getAuthInstance();
+            auth2.signOut().then(function() {
+                console.log('User signed out.');
+            });
+        }
+    </script>
+
+
+
+    <script>
+        function onSignIn(googleUser) {
+
+            var id_token = googleUser.getAuthResponse().id_token;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/google');
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.setRequestHeader('OAuthorization', id_token);
+            xhr.onload = function() {
+                    let response = JSON.parse(xhr.responseText);
+
+                    if (response.ok) {
+                        let user = response.user;
+
+                        document.getElementById('-name').innerText = user.name;
+                        document.getElementById('-email').innerText = user.email;
+                        document.getElementById('-img').setAttribute('src', user.img);
+                        document.getElementById('-token').innerText = response.token;
+                        //document.getElementById('-token').innerText = id_token;
+
+                        if (response.justRegistered) {
+                            document.getElementById('-registered').innerText = 'New User'
+                        }
+
+                    } else {
+                        document.getElementById('-err').innerText = JSON.stringify(response)
+                    }
+
+                }
+                //xhr.send('goole_id=' + id_token);
+            xhr.send();
+        }
+    </script>
+
+</head>
+
+<body>
+
+    <div id="googleSignInWrapper">
+        Continue with Google
+        <div class="g-signin2" data-onsuccess="onSignIn"></div>
+    </div>
+    <button onclick="signOut();" id='signoutBtn'>
+        <span>Sign out</span>
+    </button>
+
+    <div>
+        <h1>Login Info <span id='-registered'></span></h1>
+        <p id='-err'></p>
+        <ul>
+            <li>Name <span id='-name'></span></li>
+            <li>Email <span id='-email'></span></li>
+            <li><img id='-img' /></li>
+            <li>Token: <span id='-token'></span></li>
+        </ul>
+    </div>
+
+
+</body>
+
+</html>

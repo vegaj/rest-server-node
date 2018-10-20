@@ -25,6 +25,20 @@ function verifyJWT(req, resp, next) {
     })
 }
 
+function forActiveUsersOnly(req, resp, next) {
+
+    let user = req.user;
+    if (!user) {
+        return resp.status(401).json({ ok: false, err: 'log in first' })
+    }
+
+    if (user.status) {
+        return next()
+    } else {
+        return resp.status(403).json({ ok: false, err: 'this account has been disabled' })
+    }
+}
+
 function forAdminOnly(req, resp, next) {
     let user = req.user
 
@@ -32,7 +46,7 @@ function forAdminOnly(req, resp, next) {
         return resp.status(403).json({ ok: false, err: 'forbidden' })
     }
 
-    next()
+    return next();
 }
 
 function ifNotLoggedIn(req, resp, next) {
@@ -49,5 +63,6 @@ function ifNotLoggedIn(req, resp, next) {
 module.exports = {
     verifyJWT,
     ifNotLoggedIn,
-    forAdminOnly
+    forAdminOnly,
+    forActiveUsersOnly
 }

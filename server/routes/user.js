@@ -7,11 +7,6 @@ const SHOW_DEF = 5;
 
 const User = require('../model/user')
 const auth = require('../middlewares/auth')
-
-app.get('/', (req, res) => {
-    res.json({ msg: "Hello, World!!" })
-})
-
 const bcrypt = require('bcryptjs')
 
 app.post('/user', auth.ifNotLoggedIn, (req, res) => {
@@ -39,7 +34,8 @@ app.post('/user', auth.ifNotLoggedIn, (req, res) => {
 
 })
 
-app.put('/user/', auth.verifyJWT, (req, res) => {
+//Modify the user itself.
+app.put('/user/', [auth.verifyJWT, auth.forActiveUsersOnly], (req, res) => {
 
     let id = req.user.id;
     let body = _.pick(req.body, ['name', 'img'])
@@ -55,7 +51,7 @@ app.put('/user/', auth.verifyJWT, (req, res) => {
 
 
 //Hard deletion
-app.delete('/delete/:id', [auth.verifyJWT, auth.forAdminOnly], (req, resp) => {
+app.delete('/delete/:id', [auth.verifyJWT, auth.forActiveUsersOnly, auth.forAdminOnly], (req, resp) => {
 
     let id = req.params.id;
     if (id === undefined) {
@@ -73,7 +69,7 @@ app.delete('/delete/:id', [auth.verifyJWT, auth.forAdminOnly], (req, resp) => {
 })
 
 //Not a switch status to active/inactive
-app.patch('/user/:id', [auth.verifyJWT, auth.forAdminOnly], (req, resp) => {
+app.patch('/user/:id', [auth.verifyJWT, auth.forActiveUsersOnly, auth.forAdminOnly], (req, resp) => {
 
     let id = req.params.id;
     let status = req.body.status;
@@ -99,15 +95,23 @@ app.patch('/user/:id', [auth.verifyJWT, auth.forAdminOnly], (req, resp) => {
 
 
 //Get information from a certain user searched by name
-app.get('/user/:username', auth.verifyJWT, (req, resp) => {
+app.get('/user', [auth.verifyJWT, auth.forActiveUsersOnly], (req, resp) => {
 
-    let name = req.params.username;
+    let searchTerm = req.query.email;
 
-    if (name === undefined) {
-        return resp.status(400).json({ ok: false, err: 'provide a username' })
+    if (searchTerm === undefined) {
+        return searchByID(req.user.id, resp)
     }
 
-    User.findOne({ name }, 'email name img role', (err, userDB) => {
+    if (!searchTerm) {
+        console.log('On Get: /user. user._id field missing!');
+        return resp.status(400).json({ ok: false, err: 'bad request' });
+    }
+    searchByEmail(searchTerm, resp);
+});
+
+const searchByEmail = (email, resp) => {
+    User.findOne({ email }, 'email name img role', (err, userDB) => {
         if (err) {
             console.log(`On Get: /user. ${err}`)
             return resp.status(500).json({ ok: false, err: 'service unavailable. Try again later.' });
@@ -118,19 +122,10 @@ app.get('/user/:username', auth.verifyJWT, (req, resp) => {
         }
 
         resp.json({ ok: true, user: userDB })
-    })
-})
+    });
+}
 
-//Get information from the current user
-app.get('/user', auth.verifyJWT, (req, resp) => {
-
-    let id = req.user.id;
-
-    if (!id) {
-        console.log('On Get: /user. user._id field missing!');
-        return resp.status(400).json({ ok: false, err: 'bad request' });
-    }
-
+const searchByID = (id, resp) => {
     User.findOne({ _id: id }, 'email name img role', (err, userDB) => {
 
         if (err) {
@@ -144,9 +139,10 @@ app.get('/user', auth.verifyJWT, (req, resp) => {
 
         return resp.json({ ok: true, user: userDB })
     })
-})
+}
 
-app.get('/users', auth.verifyJWT, (req, resp) => {
+
+app.get('/users', [auth.verifyJWT, auth.forActiveUsersOnly], (req, resp) => {
 
     let from;
     let show;

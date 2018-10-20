@@ -18,7 +18,7 @@ app.post('/login', auth.ifNotLoggedIn, (req, resp) => {
 
     User.findOne({ email: body.email }, (err, userDB) => {
         if (err) {
-            console.log(`Internal -> ${err}`)
+            console.log(`Internal ${err}`)
             resp.status(500).json({ ok: false, err: 'Internal Server Error' })
             return;
         }
@@ -65,5 +65,42 @@ app.post('/login', auth.ifNotLoggedIn, (req, resp) => {
     })
 });
 
+/*
+///--- Google
+const { OAuth2Client } = require('google-auth-library');
+
+const client = new OAuth2Client(process.env.CLIENT_ID)
+
+const verifyGoogleIDToken = async(idToken) => {
+
+    const ticket = await client.verifyIdToken({
+        idToken,
+        audience: process.env.CLIENT_ID,
+    })
+
+    const payload = ticket.payload
+    return {
+        name: payload.name,
+        img: payload.picture,
+        email: payload.email,
+        google: true
+    }
+}
+
+app.post('/google', (req, resp) => {
+    let token = req.body.idtoken
+    verifyGoogleIDToken(token)
+        .then(userData => {
+            resp.json({ ok: true, userData })
+        })
+        .catch(err => {
+            resp.status(400).json({
+                ok: false,
+                err,
+            })
+        })
+})
+
+*/
 
 module.exports = app;

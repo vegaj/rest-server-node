@@ -25,3 +25,9 @@ process.env.URL_DB = urlDB;
 // JWT SEED
 //==================================
 process.env.SEED = process.env.SEED || 'seed-for-development'
+
+
+//=================================
+// Client ID
+//=================================
+process.env.CLIENT_ID = process.env.CLIENT_ID || '545101703869-pc8bioi5dh736hhvs8mluns7tfp4b5g0.apps.googleusercontent.com'
