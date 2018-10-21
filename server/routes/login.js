@@ -43,7 +43,7 @@ app.post('/login', auth.ifNotLoggedIn, (req, resp) => {
                     })
                 }
 
-                let payload = { user: { id: userDB._id, email: userDB.email, img: userDB.img, role: userDB.role, google: userDB.google } };
+                let payload = { user: { id: userDB._id, email: userDB.email, img: userDB.img, role: userDB.role, google: userDB.google, status: userDB.status } };
                 let token = jwt.sign(payload,
                     process.env.SEED, {
                         jwtid: 'node-server-auth',

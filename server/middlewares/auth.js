@@ -32,6 +32,7 @@ function forActiveUsersOnly(req, resp, next) {
         return resp.status(401).json({ ok: false, err: 'log in first' })
     }
 
+    console.log(`User input ${user}`)
     if (user.status) {
         return next()
     } else {

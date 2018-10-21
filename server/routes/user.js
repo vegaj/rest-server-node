@@ -38,12 +38,13 @@ app.post('/user', auth.ifNotLoggedIn, (req, res) => {
 app.put('/user/', [auth.verifyJWT, auth.forActiveUsersOnly], (req, res) => {
 
     let id = req.user.id;
-    let body = _.pick(req.body, ['name', 'img'])
+    let body = _.pick(req.body, ['name', 'img', 'email'])
 
-    User.findOneAndUpdate(id, body, { runValidators: true, new: true }, (err, userDB) => {
+    User.findOneAndUpdate({ _id: id }, body, { runValidators: true, new: true }, (err, userDB) => {
         if (err) {
             res.status(400).json({ ok: false, err })
         } else {
+            console.log(`User output ${userDB}`)
             res.json({ ok: true, user: userDB })
         }
     })
@@ -59,7 +60,7 @@ app.delete('/delete/:id', [auth.verifyJWT, auth.forActiveUsersOnly, auth.forAdmi
         return;
     }
 
-    User.findOneAndRemove({ id }, (err, doc) => {
+    User.findOneAndRemove({ _id: id }, (err, doc) => {
         if (err) {
             resp.status(404).json({ ok: false, err })
         } else {
@@ -83,7 +84,7 @@ app.patch('/user/:id', [auth.verifyJWT, auth.forActiveUsersOnly, auth.forAdminOn
         return resp.status(400).json({ ok: false, err: 'specify the new status for the user (enabled = true / disabled = false)' })
     }
 
-    User.findOneAndUpdate(id, { status }, { new: true, runValidators: true }, (err, doc) => {
+    User.findOneAndUpdate({ _id: id }, { status }, { new: true, runValidators: true }, (err, doc) => {
         if (err) {
             resp.status(404).json({ ok: false, err });
         } else {
