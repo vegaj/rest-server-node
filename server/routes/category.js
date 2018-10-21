@@ -126,14 +126,17 @@ app.delete('/category/:id', [auth.verifyJWT, auth.forAdminOnly], (req, resp) => 
 //==============================
 app.get('/category', auth.verifyJWT, (req, resp) => {
 
-    Category.find((err, categories) => {
-        if (err) {
-            return resp.status(500).json({ ok: false, err })
-        }
+    Category.find({})
+        .sort('name')
+        .populate('user', 'name email')
+        .exec((err, categories) => {
+            if (err) {
+                return resp.status(500).json({ ok: false, err })
+            }
 
-        categories = categories.length === 0 ? [] : categories;
-        return resp.json({ ok: true, categories });
-    })
+            categories = categories.length === 0 ? [] : categories;
+            return resp.json({ ok: true, categories });
+        })
 })
 
 
