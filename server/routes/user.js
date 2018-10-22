@@ -30,7 +30,7 @@ app.post('/user', auth.ifNotLoggedIn, (req, res) => {
         } else {
             res.status(200).json({ ok: true, user: userDB })
         }
-    })
+    });
 
 })
 

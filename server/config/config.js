@@ -1,3 +1,6 @@
+const path = require('path')
+
+
 //===================================
 // Port
 //===================================
@@ -28,6 +31,12 @@ process.env.SEED = process.env.SEED || 'seed-for-development'
 
 
 //=================================
-// Client ID
+//  Client ID
 //=================================
 process.env.CLIENT_ID = process.env.CLIENT_ID || '545101703869-pc8bioi5dh736hhvs8mluns7tfp4b5g0.apps.googleusercontent.com'
+
+
+//==============================================
+//  The root for the uploaded files warehouse
+//==============================================
+process.env.WAREHOUSE_DIR = process.env.WAREHOUSE_DIR || path.resolve(__dirname, '../../warehouse');
