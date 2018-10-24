@@ -39,4 +39,8 @@ process.env.CLIENT_ID = process.env.CLIENT_ID || '545101703869-pc8bioi5dh736hhvs
 //==============================================
 //  The root for the uploaded files warehouse
 //==============================================
-process.env.WAREHOUSE_DIR = process.env.WAREHOUSE_DIR || path.resolve(__dirname, '../../warehouse');
+process.env.WAREHOUSE_DIR = process.env.WAREHOUSE_DIR || path.resolve(__dirname, '../../public/');
+
+//==============================================
+//  The root for the uploaded files warehouse
+//==============================================

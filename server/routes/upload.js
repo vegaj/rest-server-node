@@ -11,7 +11,7 @@ const app = express();
 
 const ROOT = process.env.WAREHOUSE_DIR;
 
-const EXTENSIONS = ['jpg', 'png', 'ico', 'gif'];
+const EXTENSIONS = ['jpg', 'png', 'ico', 'gif', 'PNG', 'JPEG', 'jpeg', ];
 const TYPES = ['user', 'product'];
 
 
@@ -95,16 +95,19 @@ function uploadUserImage(file, opt, resp) {
         return resp.status(500).json({ ok: false, err: 'user missing' });
     }
 
+
     let newpath = `${opt.basename}-${opt.user.id}-${new Date().getMilliseconds()}.${opt.extension}`
-    file.mv(path.join(ROOT, 'user', newpath), err => {
+    newpath = path.join('assets', 'user', newpath);
+
+    file.mv(path.join(ROOT, newpath), err => {
         if (err)
             return resp.status(500).json({ ok: false, err, code: 500 });
 
+        User.findOneAndUpdate({ _id: id }, { img: useUnixSeparator(newpath) }, (err, userDB) => {
 
-        User.findOneAndUpdate({ _id: id }, { img: newpath }, (err, userDB) => {
-
-            let fullPath = path.join(ROOT, 'user', userDB.img || "none");
-
+            let fullPath = path.join(ROOT, userDB.img || "none");
+            //let fullPath = path.join(userDB.img || "none");
+            console.log(fullPath)
             if (err) {
                 deleteFile(fullPath);
                 return resp.status(500).json({ ok: false, err });
@@ -124,12 +127,20 @@ function uploadUserImage(file, opt, resp) {
     })
 }
 
-
+function useUnixSeparator(path) {
+    let x = path;
+    let y = undefined;
+    while (x !== y) {
+        y = x
+        x = String(x).replace('\\', '/')
+    }
+    return x;
+}
 
 function deleteFile(filepath) {
 
-
     fs.exists(filepath, exists => {
+
         if (exists) {
             fs.unlink(filepath,
                 err => err && console.log(`Error deleting ${filepath} - ${err}`)

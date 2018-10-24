@@ -8,6 +8,7 @@ var productSchema = new Schema({
     unitPrice: { type: Number, required: [true, 'the unit price is required'] },
     description: { type: String, required: false },
     available: { type: Boolean, required: true, default: true },
+    picture: { type: String }, //{ type: Schema.Types.Array },
     category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
     user: { type: Schema.Types.ObjectId, ref: 'User' }
 });

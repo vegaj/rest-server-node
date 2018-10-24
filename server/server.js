@@ -6,9 +6,6 @@ const express = require('express')
 const mongoose = require('mongoose');
 const path = require('path')
 
-const cte = require('./config/constants')
-
-
 const app = express()
 const bodyParser = require('body-parser')
 

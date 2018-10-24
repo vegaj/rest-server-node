@@ -20,13 +20,12 @@ app.get('/product', auth.verifyJWT, (req, resp) => {
     from = isNaN(from) ? 0 : from;
     show = isNaN(show) ? cte.DEF_PAGE : show;
 
-    Product.find({})
+    Product.find({ available: true })
         .skip(from)
         .limit(show)
         .populate('user', 'name')
         .populate('category', 'name')
         .exec((err, products) => {
-
 
             if (err) {
                 console.log(`GET /product encountered ${err}`)
@@ -55,11 +54,12 @@ app.post('/product', auth.verifyJWT, (req, resp) => {
     prod.description = body.description;
     prod.unitPrice = body.unitPrice;
     prod.category = body.category;
+    prod.picture = body.picture;
     prod.user = user.id;
 
     prod.save((err, proDB) => {
         if (err) {
-            resp.status(500).json({ ok: false, err });
+            resp.status(400).json({ ok: false, err });
         } else {
             resp.json({ ok: true, product: proDB });
         }
@@ -76,12 +76,11 @@ app.put('/product/:id', auth.verifyJWT, (req, resp) => {
         return resp.status(400).json({ ok: false, err: 'provide a product id' })
     }
 
-    let body = _.pick(req.body, ['name', 'description', 'unitPrice', 'category'])
+    let body = _.pick(req.body, ['name', 'description', 'unitPrice', 'category', 'picture'])
 
-    Product.findOneAndUpdate({ _id: id }, body, { runValidators: true, new: true },
+    Product.findOneAndUpdate({ _id: id }, body, { runValidators: true, context: 'query', new: true },
         (err, proDB) => {
             if (err) {
-                console.log(`Internal ${err}`);
                 return resp.status(400).json({ ok: false, err });
             }
 
@@ -97,12 +96,55 @@ app.put('/product/:id', auth.verifyJWT, (req, resp) => {
 //====================
 // Soft delete an existing product
 //====================
+app.delete('/product/:id', auth.verifyJWT, (req, resp) => {
+    let id = req.params.id;
+    if (!id) {
+        return resp.status(400).json({ ok: false, err: 'provide a product id' })
+    }
 
+    Product.findOneAndUpdate({ _id: id }, { available: false }, { runValidators: true, context: 'query', new: true },
+        (err, proDB) => {
+            if (err) {
+                return resp.status(400).json({ ok: false, err });
+            }
+
+            if (!proDB) {
+                return resp.status(404).json({ ok: false, err: 'not found' })
+            }
+
+            return resp.json({ ok: true, product: _.pick(proDB, ['name', 'description', 'category', 'unitPrice', 'picture']) })
+        }
+    )
+})
 
 
 //====================
 // Get one product by id
 //====================
+app.get('/product/:id', auth.verifyJWT, (req, resp) => {
+    let id = req.params.id;
+    if (!id) {
+        return resp.status(400).json({ ok: false, err: 'provide a product id' })
+    }
 
+    Product.findOne({ _id: id })
+        .populate('category', 'name')
+        .populate('user', 'name email img')
+        .exec((err, proDB) => {
+            if (err) {
+                return resp.status(400).json({ ok: false, err });
+            }
+
+            if (!proDB) {
+                return resp.status(404).json({ ok: false, err: 'not found' })
+            }
+
+            return resp.json({
+                ok: true,
+                product: _.pick(proDB, ['name', 'description', 'category', 'user', 'unitPrice', 'picture'])
+            });
+        })
+
+})
 
 module.exports = app;
